@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.tliaswebmanageme.mapper.EmpMapper">
+    <insert id="insertIntoEmp">
+        insert into emp values
+        (null,#{username},#{password},#{name},#{gender},#{phone},#{job},#{salary},#{image},#{entryDate},#{deptId},#{createTime},#{updateTime})
+    </insert>
+    <insert id="insertIntoEmpExpr">
+        insert into emp_expr (emp_id,begin,end,company,job) values
+        <foreach collection="exprList" item="expr" separator=",">
+            (#{expr.empId},#{expr.begin},#{expr.end},#{expr.company},#{expr.job})
+        </foreach>
+    </insert>
+    <select id="selectPage" resultType="com.example.tliaswebmanageme.pojo.Emp">
+        select e.*, e.update_time, d.name as dept_name
+        from emp e left join dept d on e.dept_id = d.id
+        <where>
+            <if test="name != null and name !=''">
+                e.name like concat('%',#{name},'%')
+            </if>
+            <if test="gender != null">
+                and e.gender =#{gender}
+            </if>
+            <if test="begin != null and end != null">
+                and e.entry_date between #{begin} and #{end}
+            </if>
+        </where>
+        order by e.update_time desc
+    </select>
+    <select id="findById" resultMap="findByIdMap">
+        select e.*,ee.id as exprId,ee.begin,ee.end,ee.company,ee.job as exprJob,ee.emp_id
+        from emp e left join emp_expr ee on e.id =ee.emp_id
+        where e.id = #{id}
+        order by e.update_time desc
+    </select>
+    <select id="login" resultType="com.example.tliaswebmanageme.pojo.Emp">
+        select id ,username,password from emp where username = #{username}
+    </select>
+    <resultMap id="findByIdMap" type="com.example.tliaswebmanageme.pojo.Emp">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="phone" column="phone"/>
+        <result property="name" column="name"/>
+        <result property="gender" column="gender"/>
+        <result property="image" column="image"/>
+        <result property="job" column="job"/>
+        <result property="salary" column="salary"/>
+        <result property="entryDate" column="entry_date"/>
+        <result property="deptId" column="dept_id"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <collection property="exprList" ofType="com.example.tliaswebmanageme.pojo.EmpExpr">
+            <id property="id" column="exprId"/>
+            <result property="begin" column="begin"/>
+            <result property="end" column="end"/>
+            <result property="company" column="company"/>
+            <result property="job" column="exprJob"/>
+            <result property="empId" column="emp_id"/>
+        </collection>
+    </resultMap>
+    <delete id="deleteByIds">
+        delete from emp where id in
+        <foreach item="id" collection="ids" separator="," open="(" close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>
